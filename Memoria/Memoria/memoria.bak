@@ -1,0 +1,335 @@
+#lang racket
+
+(require (lib "graphics.ss" "graphics")) (open-graphics)
+;;desenha as janelas
+(define janela (open-viewport "Memoria" 1200 700))
+(define telaFundo (open-pixmap "Memoria" 1200 700))
+;;desenham os fundos
+((draw-pixmap telaFundo) "Imagens/background.png" (make-posn 0 0))
+((draw-pixmap telaFundo) "Imagens/fundomatriz.jpg" (make-posn 90 10))
+((draw-rectangle telaFundo)(make-posn 90 10) 680 680 "black") ;770 765
+
+;desenham os textos
+(((draw-pixmap-posn "Imagens/Acertos.png") telaFundo)(make-posn 840 20)) ;90 790
+
+;cria o quadro do cronometro
+((draw-rectangle telaFundo)(make-posn 1030 60) 70 20) ;289 830
+((draw-solid-rectangle telaFundo)(make-posn 1031 61) 68 18 "white") ;290 831
+((draw-string telaFundo) (make-posn 1036 75) "00" "blue") ;295 845
+((draw-string telaFundo) (make-posn 1056 75) ":" "blue") ;315 845
+
+;cria quadro de acerto e erro
+((draw-rectangle telaFundo)(make-posn 870 60) 60 20) ;120 830
+((draw-solid-rectangle telaFundo)(make-posn 871 61) 58 18 "white") ;121 831
+((draw-rectangle telaFundo)(make-posn 870 130) 60 20);120 900
+((draw-solid-rectangle telaFundo)(make-posn 871 131) 58 18 "white");121 901
+((draw-rectangle telaFundo)(make-posn 1014 130) 87 20);264 900
+((draw-solid-rectangle telaFundo)(make-posn 1015 131) 85 18 "white");265 901
+
+;;define os 16 fundos das celulas (celula fechada)
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 100 20))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 270 20))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 440 20))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 610 20))
+
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 100 190))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 270 190))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 440 190))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 610 190))
+
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 100 360))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 270 360))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 440 360))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 610 360))
+
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 100 530))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 270 530))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 440 530))
+(((draw-pixmap-posn "Imagens/celulafechada.jpg" ) telaFundo)(make-posn 610 530))
+
+;;define os fundos das celulas
+(define Celula "Imagens/fundocelula.jpg")
+(define FundoCelula "Imagens/celulafechada.jpg")
+
+(copy-viewport telaFundo janela)
+
+;; define o fundo que visualiza a imagem
+(define (FundoImagem posicao) 
+  (((draw-pixmap-posn Celula ) janela)posicao))
+
+;Define o fundo que nao visualiza a imagem
+(define (FundoImagem2 posicao) 
+  (((draw-pixmap-posn FundoCelula ) janela)posicao))
+
+;;define cada imagem
+(define imagem1 "Imagens/img1.png")
+(define imagem2 "Imagens/img2.jpg")
+(define imagem3 "Imagens/img3.jpg")
+(define imagem4 "Imagens/img4.png")
+(define imagem5 "Imagens/img5.jpg")
+(define imagem6 "Imagens/img6.jpg")
+(define imagem7 "Imagens/img7.jpg")
+(define imagem8 "Imagens/img8.jpg")
+
+;guarda a lista de imagens e posicoes
+;As imagens estao em pares (2x cada)
+(define imagens (list imagem1 imagem2 imagem3 imagem4 imagem5 imagem6 imagem7 imagem8
+                       imagem1 imagem2 imagem3 imagem4 imagem5 imagem6 imagem7 imagem8))
+(define posicoes (list (make-posn 100 20) (make-posn 270 20) (make-posn 440 20) (make-posn 610 20)
+                         (make-posn 100 190) (make-posn 270 190) (make-posn 440 190) (make-posn 610 190)
+                         (make-posn 100 360) (make-posn 270 360) (make-posn 440 360) (make-posn 610 360)
+                         (make-posn 100 530) (make-posn 270 530) (make-posn 440 530) (make-posn 610 530)))
+
+;Lista com o estado de cada imagem
+(define estadoImagens (make-vector 16 0))
+
+;Se elimina elimina o elemento da posicao k da lista
+(define (removeDaLista lista k)
+  (append (reverse (list-tail (reverse lista) (- (length lista) k))) (list-tail lista (+ k 1))))
+
+;Vector com aleatorios 
+(define aleatorio
+  (vector (random 1) (random 2) (random 3) (random 4)
+          (random 5) (random 6) (random 7) (random 8)
+          (random 9) (random 10) (random 11) (random 12)
+          (random 13) (random 14) (random 15) (random 16)))
+
+;cria uma lista com as imagens embaralhadas
+(define (imagensAleatorias listaImagens)
+  (cond
+    [(not (empty? listaImagens)) (cons (list-ref listaImagens (vector-ref aleatorio (- (length listaImagens) 1))) (imagensAleatorias (removeDaLista listaImagens (vector-ref aleatorio (- (length listaImagens) 1)))))]
+    [else null]))
+
+;define tempo inicial
+(define tempoInicial (current-seconds))
+
+;funcao que conta segundos de 0 a n
+(define (contador_segundos n)
+  (- (current-seconds) tempoInicial))
+
+;Funcao booleana que define se o clique foi na imagem
+(define (clickCelula? posx posy click)
+  (if (and (> (posn-x (mouse-click-posn click)) posx)
+           (< (posn-x (mouse-click-posn click)) (+ posx 150))
+           (> (posn-y (mouse-click-posn click)) posy)
+           (< (posn-y (mouse-click-posn click)) (+ posy 150)))
+      #t
+      #f))
+
+;determina em qual dos 16 foi o clique
+(define (clickCelulas? click n)
+  (cond 
+    [(< n 16) (cond
+                [(clickCelula? (posn-x (list-ref posicoes n)) (posn-y (list-ref posicoes n)) click) #t]
+                [else (clickCelulas? click (+ n 1))])]
+    [else #f]))
+
+
+
+
+
+;da a posicao da celula onde foi clicado
+(define (posicaoCelula click n)
+  (if (clickCelulas? click 0)
+      (cond
+        [(clickCelula? (posn-x (list-ref posicoes n)) (posn-y (list-ref posicoes n)) click) (make-posn (posn-x (list-ref posicoes n)) (posn-y (list-ref posicoes n)))]
+        [else (posicaoCelula click (+ n 1))])
+      (void)))
+
+;da a posicao dentro do vetor da celula que teve clique
+(define (posicaoVetorCelula click n)
+  (if (clickCelulas? click 0)
+      (cond
+        [(clickCelula? (posn-x (list-ref posicoes n)) (posn-y (list-ref posicoes n)) click) n]
+        [else (posicaoVetorCelula click (+ n 1))])
+      (void)))
+
+;troca o estado de uma imagem dentro do vetor
+(define (trocaEstadoImagem k imagem)
+  (begin (vector-set! estadoImagens k imagem) estadoImagens))
+
+;funcao bool que retorna se n = 1
+(define (igual? n)
+  (if (equal? n 1) #t #f))
+
+;determina o numero do click
+;n pode ter qualquer valor
+(define (numeroClick n)
+   (length (filter igual? (vector->list estadoImagens))))
+
+;determina se eh primeiro ou segundo clique
+(define (primeiroClick? n)
+  (if (equal? (numeroClick n) 1) #t #f))
+
+(define (segundoClick? n)
+  (if (equal? (numeroClick n) 2) #t #f))
+
+;inverte um vetor
+(define (inverteVetor vect)
+  (list->vector (reverse (vector->list vect))))
+
+
+
+
+;da a posicao dentro do vetor da que foi dado o primeiro click
+;no valor de posicao do clique2 é colocada a posicao dentro do vetor na que ocorreu o segundo click
+;n valerá 0
+(define (posicaoVetorClick1? vect n)
+  (cond
+    [(<= n (vector-length vect)) (cond
+                                   [(equal? (vector-ref vect n) 1) n]
+                                   [else (posicaoVetorClick1? vect (+ n 1))])]
+    [else (void)]))
+
+;2
+(define (posicaoVetorClick2? vect n)
+  (cond
+    [(<= n (vector-length vect)) (cond
+                                   [(equal? (vector-ref vect n) 1) (- 15 n)]
+                                   [else (posicaoVetorClick2? vect (+ n 1))])]
+    [else (void)]))
+
+;funcao que apaga a iamgem 1 segundo depois de ter clicado na segunda
+(define (apagaImagem n posicao1 posicao2)
+ (cond
+   [(and (>= (- (current-milliseconds) n) 0) (<= (- (current-milliseconds) n) 400)) (apagaImagem n posicao1 posicao2)]
+   [(and (>= (- (current-milliseconds) n) 401) (<= (- (current-milliseconds) n) 800)) (begin (FundoImagem2 posicao1)
+                                                                               (FundoImagem2 posicao2)
+                                                                               (apagaImagem n posicao1 posicao2))]
+   [else (void)]))
+
+;verifica se a imaegm do primeiro e segundo click sao iguais
+;imagem 1 e 2 correspondem as posicoes dentro do vetor de imagens aleatorias
+(define (imagensIguais? imagem1 imagem2)
+  (cond
+    [(equal? (list-ref (imagensAleatorias imagens) (posicaoVetorClick1? estadoImagens 0)) (list-ref (imagensAleatorias imagens) (posicaoVetorClick2? (inverteVetor estadoImagens) 0))) #t]
+    [else #f]))
+
+;apaga o 1 das imagens do vetor de estados de imagens
+(define (estadoGuardarImagem n)
+  (begin
+    (vector-set! estadoImagens (posicaoVetorClick1? estadoImagens 0) 2)
+    (vector-set! estadoImagens (posicaoVetorClick2? (inverteVetor estadoImagens) 0) 2)
+    estadoImagens))
+
+;funcao que apaga a imagem tanto visualmente quanto do vetor
+(define (estadoApagarImagem n)
+  (begin 
+      (apagaImagem (current-milliseconds) (list-ref posicoes (posicaoVetorClick1? estadoImagens 0)) (list-ref posicoes (posicaoVetorClick2? (inverteVetor estadoImagens) 0)))
+      (trocaEstadoImagem (posicaoVetorClick1? estadoImagens 0) 0)
+      (trocaEstadoImagem (posicaoVetorClick2? (inverteVetor estadoImagens) 0) 0)
+      estadoImagens))
+
+
+
+
+;se as imagens sao iguais, troca o estado delas por 2, senao troca por 0
+(define (designarEstadoImagem n)
+  (cond 
+    [(imagensIguais? (list-ref (imagensAleatorias imagens) (posicaoVetorClick1? estadoImagens 0)) (list-ref (imagensAleatorias imagens) (posicaoVetorClick2? (inverteVetor estadoImagens) 0))) 
+           (estadoGuardarImagem 0)]
+    [else (estadoApagarImagem 0)]))
+
+;definem acertos e erros, o primeiro elemento sao os acertos e o segundo sao os erros
+(define acertosErros
+  (vector 0 0))
+
+;Funcao que incrementa os valores de acertos e erros
+(define (incrementarPontos n)
+  (cond
+    [(imagensIguais? (list-ref (imagensAleatorias imagens) (posicaoVetorClick1? estadoImagens 0)) (list-ref (imagensAleatorias imagens) (posicaoVetorClick2? (inverteVetor estadoImagens) 0))) 
+     (begin (vector-set! acertosErros 0 (+ (vector-ref acertosErros 0) 1)) acertosErros)]
+    [else (begin (vector-set! acertosErros 1 (+ (vector-ref acertosErros 1) 1)) acertosErros)]))
+
+;Funcao que visualiza os pontos de acertos e erros depois do segundo clique
+(define (verPontos n)
+  (cond
+    [(imagensIguais? (list-ref (imagensAleatorias imagens) (posicaoVetorClick1? estadoImagens 0)) (list-ref (imagensAleatorias imagens) (posicaoVetorClick2? (inverteVetor estadoImagens) 0))) 
+     (begin ((clear-string janela) (make-posn 895 75) (number->string (vector-ref acertosErros 0))) ;limpa numero anterior acertos (145 845)
+            ((draw-string janela)(make-posn 895 75) (number->string (vector-ref (incrementarPontos 0) 0))))];escreve novo numero acertos (145 845)
+    [else (begin ((clear-string janela) (make-posn 895 145) (number->string (vector-ref acertosErros 1)));limpa numero anterior erros (145 915)
+            ((draw-string janela)(make-posn 895 145) (number->string (vector-ref (incrementarPontos 0) 1))))]));escreve novo numero erros (145 915)
+
+;desconta pontos de acordo com a quantidade de tempo passado
+(define (menosPontosTempo p)
+  (cond
+    [(> (contador_segundos 0) 30) (* (- (contador_segundos 0) 30) 100)]
+    [(> (contador_segundos 0) 60) (+ 3000 (* (- (contador_segundos 0) 30) 50))]
+    [(>= (contador_segundos 0) 120) 8000]
+    [else 0]))
+
+;Desconta ponto de acordo com a quantidade de erros 
+(define (menosPontosErros p)
+  (* (vector-ref acertosErros 1) 200))
+
+;Adiciona pontos de acordo com a quantidade de acertos
+(define (maisPontosAcertos p)
+  (cond
+    [(< (contador_segundos 0) 40) 0]
+    [else (* (vector-ref acertosErros 0) 110)]))
+
+;Pontuacao total, p = 10000
+(define (pontuacaoTotal p)
+  (cond
+    [(and (>= (contador_segundos 0) 120) (> (vector-ref acertosErros 1) (vector-ref acertosErros 0))) (* (vector-ref acertosErros 0) 90)]
+    [else (- (+ p (maisPontosAcertos 0)) (+ (menosPontosErros 0) (menosPontosErros 0)))]))
+
+
+
+
+
+
+
+
+;Funcao que detecta se o click foi em uma celula e em qual das 16 foi, se eh primeiro ou segundo click
+(define (mostrarImagem click)
+  (if (clickCelulas? click 0)
+      (begin
+        (trocaEstadoImagem (posicaoVetorCelula click 0) 1)
+        (cond
+          [(primeiroClick? 0) (begin
+                               (FundoImagem (posicaoCelula click 0))
+                               (((draw-pixmap-posn (list-ref (imagensAleatorias imagens) (posicaoVetorCelula click 0)) ) janela)(posicaoCelula click 0)))];;;ver esse gif mask --- tinha, mas tirei
+          [(segundoClick? 0) (begin 
+                                (FundoImagem (posicaoCelula click 0))
+                                (((draw-pixmap-posn (list-ref (imagensAleatorias imagens) (posicaoVetorCelula click 0)) ) janela)(posicaoCelula click 0));;;tinha gifmask, mas tirei
+                                (verPontos 0)
+                                (designarEstadoImagem 0))]
+          [else (void)]))
+      (void)))
+    
+;Se crea el cronometro, el cual solo contara hasta 2 minutos tiempo maximo que tendra el jugador
+(define (jogo n s minutos click)
+ (cond
+   [(equal? (vector-ref acertosErros 0) 8) (begin
+                                                 ;(((draw-pixmap-posn "Imagenes/Puntuacion_Total.gif" 'gif/mask) ventana)(make-posn 165 660))
+                                                 ((draw-string janela) (make-posn 1040 145) (number->string (pontuacaoTotal 10000))))];290 915
+   [(>= minutos 2) (begin
+                     ((clear-solid-rectangle janela)(make-posn 1075 61) 27 18);325 831
+                     ((draw-string janela) (make-posn 1075 75) "00" "blue");posicao que faz os segundos quando chega em 2 minutos(325 845)
+                    ; (((draw-pixmap-posn "Imagenes/Puntuacion_Total.gif" 'gif/mask) ventana)(make-posn 165 660))
+                     ((draw-string janela) (make-posn 1040 145) (number->string (pontuacaoTotal 10000)) "blue"))];posicao da pontuaçao(290 915)
+   [(not (equal? click #f)) (begin
+                              (mostrarImagem (get-mouse-click janela))
+                              (jogo n s minutos (ready-mouse-release janela)))]
+   [(<= (- (current-seconds) s) 9) (cond
+                                     [(equal? n (current-seconds)) (begin
+                                                                     ((draw-string janela) (make-posn 1065 75) "0" "blue");;posicao do 0 de 0 a 9 (325 845)
+                                                                     ((draw-string janela) (make-posn 1075 75) (number->string (- (current-seconds) s)) "blue") ; posicao dos numeros de 1 a 9 (335 845)
+                                                                     (jogo n s minutos (ready-mouse-release janela)))]
+                                     [(not (equal? n (current-seconds)))
+                                      (begin ((clear-solid-rectangle janela)(make-posn 1065 61) 9 18);bloco pequeno que apaga segundos de 0 a 9 (335 831)
+                                             (jogo (current-seconds) s minutos (ready-mouse-release janela)))])]
+   [(>= (- (current-seconds) s) 60) (begin 
+                                      ((clear-solid-rectangle janela)(make-posn 1054 61) 9 18);bloco pequeno que apaga os minutos (1) (304 831)
+                                      ((clear-solid-rectangle janela)(make-posn 1065 61) 18 18);bloco que apaga os segundos quando vai dar 1 minuto(325 831)
+                                      ((draw-string janela) (make-posn 1054 75) (number->string (+ minutos 1)) "blue");posicao dos minutos (1)(304 845)
+                                      (jogo n (+ s 60) (+ minutos 1) (ready-mouse-release janela)))]
+   [(equal? n (current-seconds)) (begin ((draw-string janela) (make-posn 1065 75) (number->string (- (current-seconds) s)) "blue");posicao dos segundos de 10 a 59(325 845)
+                                        (jogo n s minutos (ready-mouse-release janela)))]
+   [(not (equal? n (current-seconds)))
+   (begin ((clear-solid-rectangle janela)(make-posn 1065 61) 27 18);bloco grande que apaga os segundos de 10 a 59 (325 831)
+          (jogo (current-seconds) s minutos click))]
+   [else (jogo (current-seconds) s minutos click)]))
+(jogo tempoInicial tempoInicial 0 (ready-mouse-release janela))
+
